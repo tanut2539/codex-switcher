@@ -6,6 +6,7 @@ import {
   pickAuthJsonFile,
   type FileSource,
 } from "../lib/platform";
+import { X } from "lucide-react";
 
 interface AddAccountModalProps {
   isOpen: boolean;
@@ -118,9 +119,9 @@ export function AddAccountModal({
           <h2 className="text-lg font-semibold text-claude-text dark:text-claude-text-dark">Add Account</h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { AccountWithUsage } from "../types";
 import { UsageBar } from "./UsageBar";
+import { Check, Zap, RefreshCw, Trash2, Eye, EyeOff } from "lucide-react";
 
 interface AccountCardProps {
   account: AccountWithUsage;
@@ -120,7 +121,7 @@ export function AccountCard({
 
   return (
     <div
-      className={`relative rounded-xl border p-5 transition-all duration-200 ${
+      className={`relative rounded-xl border p-5 transition-all duration-200 flex flex-col h-full min-h-[260px] ${
         account.is_active
           ? "bg-claude-card dark:bg-claude-card-dark border-claude-accent shadow-sm"
           : "bg-claude-card dark:bg-claude-card-dark border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
@@ -176,14 +177,9 @@ export function AccountCard({
               title={masked ? "Show info" : "Hide info"}
             >
               {masked ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
+                <EyeOff className="w-4 h-4" />
               ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+                <Eye className="w-4 h-4" />
               )}
             </button>
           )}
@@ -207,19 +203,19 @@ export function AccountCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-auto pt-4">
         {account.is_active ? (
           <button
             disabled
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 border border-transparent cursor-default"
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 border border-transparent cursor-default flex items-center justify-center gap-1.5"
           >
-            ✓ Active
+            <Check className="w-4 h-4" /> Active
           </button>
         ) : (
           <button
             onClick={onSwitch}
             disabled={switching || switchDisabled}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
+            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center ${
               switchDisabled
                 ? "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 cursor-not-allowed"
                 : "bg-claude-text text-claude-bg hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white/90"
@@ -234,33 +230,33 @@ export function AccountCard({
             void onWarmup();
           }}
           disabled={warmingUp}
-          className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+          className={`px-3 py-2 flex items-center justify-center text-sm rounded-lg transition-colors ${
             warmingUp
               ? "bg-claude-accent/20 text-claude-accent"
               : "bg-claude-accent/10 hover:bg-claude-accent/20 text-claude-accent"
           }`}
           title={warmingUp ? "Sending warm-up request..." : "Send minimal warm-up request"}
         >
-          ⚡
+          <Zap className={`w-4 h-4 ${warmingUp ? "animate-pulse" : ""}`} />
         </button>
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+          className={`px-3 py-2 flex items-center justify-center text-sm rounded-lg transition-colors ${
             isRefreshing
               ? "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40"
               : "bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-claude-text dark:text-claude-text-dark"
           }`}
           title="Refresh usage"
         >
-          <span className={isRefreshing ? "animate-spin inline-block" : ""}>↻</span>
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
         </button>
         <button
           onClick={onDelete}
-          className="px-3 py-2 text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors"
+          className="px-3 py-2 flex items-center justify-center text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors"
           title="Remove account"
         >
-          ✕
+          <Trash2 className="w-4 h-4" />
         </button>
       </div>
     </div>

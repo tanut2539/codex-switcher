@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useAccounts } from "./hooks/useAccounts";
 import { AccountCard, AddAccountModal, UpdateChecker } from "./components";
+import { Minus, Square, Copy, X, Eye, EyeOff, RefreshCw, Zap, Sun, Moon, Check, UserCircle2, ChevronDown, Plus } from "lucide-react";
 import type { CodexProcessInfo } from "./types";
 import {
   exportFullBackupFile,
@@ -460,10 +461,7 @@ function App() {
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                 title="Minimize"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M5 12h14" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+                <Minus className="w-4 h-4" />
               </button>
               <button
                 onClick={() => {
@@ -473,14 +471,9 @@ function App() {
                 title={isWindowMaximized ? "Restore" : "Maximize"}
               >
                 {isWindowMaximized ? (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M9 9h10v10H9z" strokeWidth="2" />
-                    <path d="M5 15V5h10" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
+                  <Copy className="h-4 w-4" />
                 ) : (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="5" y="5" width="14" height="14" strokeWidth="2" />
-                  </svg>
+                  <Square className="h-4 w-4" />
                 )}
               </button>
               <button
@@ -490,9 +483,7 @@ function App() {
                 className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-500 hover:text-white dark:text-gray-400 dark:hover:bg-red-500 dark:hover:text-white"
                 title="Close"
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M6 6l12 12M18 6L6 18" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -541,19 +532,9 @@ function App() {
                 title={allMasked ? "Show all account names and emails" : "Hide all account names and emails"}
               >
                 {allMasked ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                    />
-                  </svg>
+                  <EyeOff className="w-4 h-4" />
                 ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
+                  <Eye className="w-4 h-4" />
                 )}
               </button>
               <button
@@ -566,7 +547,7 @@ function App() {
                   className={`absolute bottom-0 left-0 h-[3px] bg-claude-accent/80 dark:bg-claude-accent/80 ${isRefreshing ? "w-full animate-pulse" : "transition-all duration-1000 ease-linear"}`}
                   style={{ width: isRefreshing ? "100%" : `${((30 - refreshCountdown) / 30) * 100}%` }}
                 />
-                <span className={`relative z-10 ${isRefreshing ? "animate-spin inline-block" : "group-hover:rotate-180 transition-transform duration-500"}`}>↻</span>
+                <span className={`relative z-10 ${isRefreshing ? "animate-spin inline-block" : "group-hover:rotate-180 transition-transform duration-500"}`}><RefreshCw className="w-4 h-4" /></span>
               </button>
               <button
                 onClick={handleWarmupAll}
@@ -574,22 +555,22 @@ function App() {
                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-claude-text transition-colors hover:bg-black/10 disabled:opacity-50 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0"
                 title="Send minimal traffic using all accounts"
               >
-                <span className={isWarmingAll ? "animate-pulse" : ""}>⚡</span>
+                <Zap className={`w-4 h-4 ${isWarmingAll ? "animate-pulse" : ""}`} />
               </button>
               <button
                 onClick={() => setThemeMode((prev) => (prev === "dark" ? "light" : "dark"))}
                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-lg text-claude-text transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0"
                 title={themeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
-                {themeMode === "dark" ? "☀" : "☾"}
+                {themeMode === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
 
               <div className="relative" ref={actionsMenuRef}>
                 <button
                   onClick={() => setIsActionsMenuOpen((prev) => !prev)}
-                  className="h-10 px-4 py-2 text-sm font-medium rounded-lg bg-claude-text text-claude-bg transition-colors hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white shrink-0 whitespace-nowrap shadow-sm"
+                  className="h-10 px-4 py-2 text-sm font-medium rounded-lg flex items-center bg-claude-text text-claude-bg transition-colors hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white shrink-0 whitespace-nowrap shadow-sm"
                 >
-                  Account ▾
+                  Account <ChevronDown className="w-4 h-4 ml-1.5" />
                 </button>
                 {isActionsMenuOpen && (
                   <div className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-black/10 bg-white p-2 text-claude-text shadow-xl dark:border-zinc-800 dark:bg-zinc-900 dark:text-claude-text-dark">
@@ -598,9 +579,9 @@ function App() {
                         setIsActionsMenuOpen(false);
                         setIsAddModalOpen(true);
                       }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                      className="w-full flex items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/10"
                     >
-                      + Add Account
+                      <Plus className="w-4 h-4 mr-2" /> Add Account
                     </button>
                     <button
                       onClick={() => {
@@ -665,7 +646,7 @@ function App() {
         ) : accounts.length === 0 ? (
           <div className="text-center py-20">
             <div className="h-16 w-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">👤</span>
+              <UserCircle2 className="w-8 h-8 text-gray-400 dark:text-gray-500" />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               No accounts yet
@@ -744,7 +725,7 @@ function App() {
       {/* Refresh Success Toast */}
       {refreshSuccess && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-3 bg-green-600 text-white rounded-lg shadow-lg text-sm flex items-center gap-2">
-          <span>✓</span> Usage refreshed successfully
+          <Check className="w-4 h-4" /> Usage refreshed successfully
         </div>
       )}
 
