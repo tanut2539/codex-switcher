@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-claude-bg: #f2efeb;
+  --color-claude-bg-dark: #18181a;
+  --color-claude-text: #1d1b1a;
+  --color-claude-text-dark: #ececec;
+  --color-claude-card: #ffffff;
+  --color-claude-card-dark: #27272a;
+  --color-claude-accent: #d97757;
+  --color-claude-accent-hover: #c26547;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {

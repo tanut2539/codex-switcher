@@ -67,7 +67,7 @@ function App() {
   const [maskedAccounts, setMaskedAccounts] = useState<Set<string>>(new Set());
   const [otherAccountsSort, setOtherAccountsSort] = useState<
     "deadline_asc" | "deadline_desc" | "remaining_desc" | "remaining_asc"
-  >("deadline_asc");
+  >("remaining_asc");
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -428,22 +428,34 @@ function App() {
         if (deadlineDiff !== 0) {
           return otherAccountsSort === "deadline_asc" ? deadlineDiff : -deadlineDiff;
         }
-        const remainingDiff =
-          getRemainingPercent(b.usage?.primary_used_percent) -
-          getRemainingPercent(a.usage?.primary_used_percent);
-        if (remainingDiff !== 0) return remainingDiff;
+        
+        const secRemA = getRemainingPercent(a.usage?.secondary_used_percent);
+        const secRemB = getRemainingPercent(b.usage?.secondary_used_percent);
+        if (secRemA !== secRemB) return secRemB - secRemA;
+
+        const priRemA = getRemainingPercent(a.usage?.primary_used_percent);
+        const priRemB = getRemainingPercent(b.usage?.primary_used_percent);
+        if (priRemA !== priRemB) return priRemB - priRemA;
+
         return a.name.localeCompare(b.name);
       }
 
-      const remainingDiff =
-        getRemainingPercent(b.usage?.primary_used_percent) -
-        getRemainingPercent(a.usage?.primary_used_percent);
-      if (otherAccountsSort === "remaining_desc" && remainingDiff !== 0) {
-        return remainingDiff;
+      const secRemA = getRemainingPercent(a.usage?.secondary_used_percent);
+      const secRemB = getRemainingPercent(b.usage?.secondary_used_percent);
+      const secDiff = secRemB - secRemA;
+
+      const priRemA = getRemainingPercent(a.usage?.primary_used_percent);
+      const priRemB = getRemainingPercent(b.usage?.primary_used_percent);
+      const priDiff = priRemB - priRemA;
+
+      if (otherAccountsSort === "remaining_desc") {
+        if (secDiff !== 0) return secDiff;
+        if (priDiff !== 0) return priDiff;
+      } else if (otherAccountsSort === "remaining_asc") {
+        if (secDiff !== 0) return -secDiff;
+        if (priDiff !== 0) return -priDiff;
       }
-      if (otherAccountsSort === "remaining_asc" && remainingDiff !== 0) {
-        return -remainingDiff;
-      }
+      
       const deadlineDiff =
         getResetDeadline(a.usage?.primary_resets_at) -
         getResetDeadline(b.usage?.primary_resets_at);
@@ -453,9 +465,9 @@ function App() {
   }, [otherAccounts, otherAccountsSort]);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex h-9 items-center bg-white px-3 dark:bg-gray-900">
+    <div className="min-h-screen bg-claude-bg text-claude-text dark:bg-claude-bg-dark dark:text-claude-text-dark font-sans selection:bg-claude-accent/20">
+      <header className="sticky top-0 z-40 border-b border-black/5 bg-transparent dark:border-white/10">
+        <div className="flex h-9 items-center px-3">
           <div
             onMouseDown={handleTitlebarDrag}
             onDoubleClick={handleTitlebarDoubleClick}
@@ -507,15 +519,15 @@ function App() {
           )}
         </div>
 
-        <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_max-content] md:items-center md:gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="h-10 w-10 rounded-xl bg-black flex items-center justify-center text-white font-bold text-lg">
+              <div className="h-10 w-10 rounded-xl bg-claude-accent flex items-center justify-center text-white font-bold text-lg shadow-sm">
                 C
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                  <h1 className="text-xl font-bold text-claude-text dark:text-claude-text-dark tracking-tight">
                     Codex Switcher
                   </h1>
                   {processInfo && (
@@ -546,7 +558,7 @@ function App() {
             <div className="flex flex-wrap items-center gap-2 shrink-0 md:ml-4 md:w-max md:flex-nowrap md:justify-end">
               <button
                 onClick={toggleMaskAll}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 shrink-0"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-claude-text transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0"
                 title={allMasked ? "Show all account names and emails" : "Hide all account names and emails"}
               >
                 {allMasked ? (
@@ -568,7 +580,7 @@ function App() {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-700 transition-colors hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 shrink-0"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-claude-text transition-colors hover:bg-black/10 disabled:opacity-50 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0"
                 title={isRefreshing ? "Refreshing all usage" : "Refresh all usage"}
               >
                 <span className={isRefreshing ? "animate-spin inline-block" : ""}>↻</span>
@@ -576,14 +588,14 @@ function App() {
               <button
                 onClick={handleWarmupAll}
                 disabled={isWarmingAll || accounts.length === 0}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-700 transition-colors hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 shrink-0"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-claude-text transition-colors hover:bg-black/10 disabled:opacity-50 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0"
                 title="Send minimal traffic using all accounts"
               >
                 <span className={isWarmingAll ? "animate-pulse" : ""}>⚡</span>
               </button>
               <button
                 onClick={() => setThemeMode((prev) => (prev === "dark" ? "light" : "dark"))}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-lg text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 shrink-0"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-lg text-claude-text transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0"
                 title={themeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {themeMode === "dark" ? "☀" : "☾"}
@@ -592,18 +604,18 @@ function App() {
               <div className="relative" ref={actionsMenuRef}>
                 <button
                   onClick={() => setIsActionsMenuOpen((prev) => !prev)}
-                  className="h-10 px-4 py-2 text-sm font-medium rounded-lg bg-gray-900 text-white transition-colors hover:bg-gray-800 dark:bg-black dark:hover:bg-neutral-900 shrink-0 whitespace-nowrap"
+                  className="h-10 px-4 py-2 text-sm font-medium rounded-lg bg-claude-text text-claude-bg transition-colors hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white shrink-0 whitespace-nowrap shadow-sm"
                 >
                   Account ▾
                 </button>
                 {isActionsMenuOpen && (
-                  <div className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-gray-200 bg-white p-2 text-gray-700 shadow-xl dark:border-neutral-800 dark:bg-black dark:text-white">
+                  <div className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-black/10 bg-white p-2 text-claude-text shadow-xl dark:border-zinc-800 dark:bg-zinc-900 dark:text-claude-text-dark">
                     <button
                       onClick={() => {
                         setIsActionsMenuOpen(false);
                         setIsAddModalOpen(true);
                       }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-900"
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/10"
                     >
                       + Add Account
                     </button>
@@ -656,7 +668,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-8">
         {loading && accounts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin h-10 w-10 border-2 border-gray-900 dark:border-gray-100 border-t-transparent rounded-full mb-4"></div>
@@ -680,7 +692,7 @@ function App() {
             </p>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-6 py-3 text-sm font-medium rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 text-white dark:text-gray-900 transition-colors"
+              className="px-6 py-3 text-sm font-medium rounded-lg bg-claude-accent hover:bg-claude-accent-hover text-white transition-colors shadow-sm"
             >
               Add Account
             </button>
@@ -735,7 +747,7 @@ function App() {
                               | "remaining_asc"
                           )
                         }
-                        className="appearance-none font-sans text-xs sm:text-sm font-medium pl-3 pr-9 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 text-gray-700 dark:text-gray-200 shadow-sm hover:border-gray-400 dark:hover:border-gray-600 hover:shadow focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-gray-400 dark:focus:border-gray-600 transition-all"
+                        className="appearance-none font-sans text-xs sm:text-sm font-medium pl-3 pr-9 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-claude-card-dark text-claude-text dark:text-claude-text-dark shadow-sm hover:border-black/20 dark:hover:border-white/20 hover:shadow focus:outline-none focus:ring-2 focus:ring-claude-accent transition-all"
                       >
                         <option value="deadline_asc">Reset: earliest to latest</option>
                         <option value="deadline_desc">Reset: latest to earliest</option>
@@ -760,7 +772,7 @@ function App() {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                   {sortedOtherAccounts.map((account) => (
                     <AccountCard
                       key={account.id}

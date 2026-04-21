@@ -122,8 +122,8 @@ export function AccountCard({
     <div
       className={`relative rounded-xl border p-5 transition-all duration-200 ${
         account.is_active
-          ? "bg-white dark:bg-gray-900 border-emerald-400 shadow-sm"
-          : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+          ? "bg-claude-card dark:bg-claude-card-dark border-claude-accent shadow-sm"
+          : "bg-claude-card dark:bg-claude-card-dark border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
       }`}
     >
       {/* Header */}
@@ -148,7 +148,7 @@ export function AccountCard({
               />
             ) : (
               <h3
-                className="font-semibold text-gray-900 dark:text-gray-100 truncate cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"
+                className="font-semibold text-claude-text dark:text-claude-text-dark truncate cursor-pointer hover:opacity-70"
                 onClick={() => {
                   if (masked) return;
                   setEditName(account.name);
@@ -211,7 +211,7 @@ export function AccountCard({
         {account.is_active ? (
           <button
             disabled
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 cursor-default"
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 border border-transparent cursor-default"
           >
             ✓ Active
           </button>
@@ -221,8 +221,8 @@ export function AccountCard({
             disabled={switching || switchDisabled}
             className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
               switchDisabled
-                ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                : "bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 text-white dark:text-gray-900"
+                ? "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 cursor-not-allowed"
+                : "bg-claude-text text-claude-bg hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white/90"
             }`}
             title={switchDisabled ? "Close all Codex processes first" : undefined}
           >
@@ -236,8 +236,8 @@ export function AccountCard({
           disabled={warmingUp}
           className={`px-3 py-2 text-sm rounded-lg transition-colors ${
             warmingUp
-              ? "bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-300"
-              : "bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+              ? "bg-claude-accent/20 text-claude-accent"
+              : "bg-claude-accent/10 hover:bg-claude-accent/20 text-claude-accent"
           }`}
           title={warmingUp ? "Sending warm-up request..." : "Send minimal warm-up request"}
         >
@@ -248,8 +248,8 @@ export function AccountCard({
           disabled={isRefreshing}
           className={`px-3 py-2 text-sm rounded-lg transition-colors ${
             isRefreshing
-              ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
-              : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+              ? "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40"
+              : "bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-claude-text dark:text-claude-text-dark"
           }`}
           title="Refresh usage"
         >
@@ -257,7 +257,7 @@ export function AccountCard({
         </button>
         <button
           onClick={onDelete}
-          className="px-3 py-2 text-sm rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-300 transition-colors"
+          className="px-3 py-2 text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors"
           title="Remove account"
         >
           ✕

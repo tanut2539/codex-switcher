@@ -112,10 +112,10 @@ export function AddAccountModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-md mx-4 shadow-xl">
+      <div className="bg-claude-card dark:bg-claude-card-dark border border-black/10 dark:border-white/10 rounded-2xl w-full max-w-md mx-4 shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add Account</h2>
+          <h2 className="text-lg font-semibold text-claude-text dark:text-claude-text-dark">Add Account</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -141,7 +141,7 @@ export function AddAccountModal({
                 setError(null);
               }}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab
-                  ? "text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100 -mb-px"
+                  ? "text-claude-text dark:text-claude-text-dark border-b-2 border-claude-text dark:border-claude-text-dark -mb-px"
                   : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 }`}
             >
@@ -162,7 +162,7 @@ export function AddAccountModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Work Account"
-              className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-colors"
+              className="w-full px-4 py-2.5 bg-claude-card dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-lg text-claude-text dark:text-claude-text-dark placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black/30 dark:focus:border-white/30 focus:ring-1 focus:ring-black/30 dark:focus:ring-white/30 transition-colors"
             />
           </div>
 
@@ -207,7 +207,7 @@ export function AddAccountModal({
                       onClick={() => {
                         void openExternalUrl(authUrl);
                       }}
-                      className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 border border-gray-900 dark:border-gray-100 rounded text-xs font-medium text-white dark:text-gray-900 transition-colors shrink-0"
+                      className="px-3 py-1.5 bg-claude-text hover:bg-claude-text/90 dark:bg-claude-text-dark dark:hover:bg-white border-transparent rounded text-xs font-medium text-claude-bg dark:text-claude-bg-dark transition-colors shrink-0"
                     >
                       Open
                     </button>
@@ -262,14 +262,14 @@ export function AddAccountModal({
         <div className="flex gap-3 p-5 border-t border-gray-100 dark:border-gray-800">
           <button
             onClick={handleClose}
-            className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+            className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 text-claude-text dark:text-claude-text-dark transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={activeTab === "oauth" ? handleOAuthLogin : handleImportFile}
             disabled={isPrimaryDisabled}
-            className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 text-white dark:text-gray-900 transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-claude-accent hover:bg-claude-accent-hover text-white transition-colors shadow-sm disabled:opacity-50"
           >
             {loading
               ? "Adding..."
