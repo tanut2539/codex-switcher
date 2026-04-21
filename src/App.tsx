@@ -39,6 +39,7 @@ function App() {
     cancelOAuthLogin,
     loadMaskedAccountIds,
     saveMaskedAccountIds,
+    refreshCountdown,
   } = useAccounts();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -558,10 +559,14 @@ function App() {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-claude-text transition-colors hover:bg-black/10 disabled:opacity-50 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0"
-                title={isRefreshing ? "Refreshing all usage" : "Refresh all usage"}
+                className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-claude-text transition-colors hover:bg-black/10 disabled:opacity-50 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0 overflow-hidden group"
+                title={isRefreshing ? "Refreshing all usage" : `Refresh all usage (${refreshCountdown}s)`}
               >
-                <span className={isRefreshing ? "animate-spin inline-block" : ""}>↻</span>
+                <div 
+                  className={`absolute bottom-0 left-0 h-[3px] bg-claude-accent/80 dark:bg-claude-accent/80 ${isRefreshing ? "w-full animate-pulse" : "transition-all duration-1000 ease-linear"}`}
+                  style={{ width: isRefreshing ? "100%" : `${((30 - refreshCountdown) / 30) * 100}%` }}
+                />
+                <span className={`relative z-10 ${isRefreshing ? "animate-spin inline-block" : "group-hover:rotate-180 transition-transform duration-500"}`}>↻</span>
               </button>
               <button
                 onClick={handleWarmupAll}

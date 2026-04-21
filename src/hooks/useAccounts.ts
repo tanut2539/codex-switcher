@@ -353,9 +353,27 @@ export function useAccounts() {
     }
   }, []);
 
+  const [refreshCountdown, setRefreshCountdown] = useState(30);
+
   useEffect(() => {
     let isSubscribed = true;
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let countdownInterval: ReturnType<typeof setInterval> | undefined;
+
+    const startCountdown = () => {
+      if (countdownInterval) clearInterval(countdownInterval);
+      setRefreshCountdown(30);
+      
+      countdownInterval = setInterval(() => {
+        setRefreshCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            poll();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    };
 
     const poll = async () => {
       if (!isSubscribed) return;
@@ -365,7 +383,7 @@ export function useAccounts() {
         // ignore auto-refresh errors
       }
       if (!isSubscribed) return;
-      timeoutId = setTimeout(poll, 30000); // 30 seconds
+      startCountdown();
     };
 
     loadAccounts()
@@ -373,12 +391,12 @@ export function useAccounts() {
       .catch(() => {})
       .finally(() => {
         if (!isSubscribed) return;
-        timeoutId = setTimeout(poll, 30000);
+        startCountdown();
       });
     
     return () => {
       isSubscribed = false;
-      clearTimeout(timeoutId);
+      if (countdownInterval) clearInterval(countdownInterval);
     };
   }, [loadAccounts, refreshUsage]);
 
@@ -404,5 +422,6 @@ export function useAccounts() {
     cancelOAuthLogin,
     loadMaskedAccountIds,
     saveMaskedAccountIds,
+    refreshCountdown,
   };
 }
