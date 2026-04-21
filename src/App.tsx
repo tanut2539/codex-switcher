@@ -461,6 +461,7 @@ function App() {
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                 title="Minimize"
+              >
                 <Minus className="w-4 h-4" />
               </button>
               <button
