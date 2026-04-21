@@ -354,14 +354,32 @@ export function useAccounts() {
   }, []);
 
   useEffect(() => {
-    loadAccounts().then((accountList) => refreshUsage(accountList));
+    let isSubscribed = true;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      if (!isSubscribed) return;
+      try {
+        await refreshUsage();
+      } catch (err) {
+        // ignore auto-refresh errors
+      }
+      if (!isSubscribed) return;
+      timeoutId = setTimeout(poll, 30000); // 30 seconds
+    };
+
+    loadAccounts()
+      .then((accountList) => refreshUsage(accountList))
+      .catch(() => {})
+      .finally(() => {
+        if (!isSubscribed) return;
+        timeoutId = setTimeout(poll, 30000);
+      });
     
-    // Auto-refresh usage every 60 seconds (same as official Codex CLI)
-    const interval = setInterval(() => {
-      refreshUsage().catch(() => {});
-    }, 60000);
-    
-    return () => clearInterval(interval);
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+    };
   }, [loadAccounts, refreshUsage]);
 
   return {

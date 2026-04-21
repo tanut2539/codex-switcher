@@ -139,9 +139,22 @@ function App() {
 
   // Check processes on mount and periodically
   useEffect(() => {
-    checkProcesses();
-    const interval = setInterval(checkProcesses, 5000);
-    return () => clearInterval(interval);
+    let isSubscribed = true;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      if (!isSubscribed) return;
+      await checkProcesses();
+      if (!isSubscribed) return;
+      timeoutId = setTimeout(poll, 3000);
+    };
+
+    void poll();
+
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+    };
   }, [checkProcesses]);
 
   // Load masked accounts from storage on mount
