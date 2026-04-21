@@ -162,7 +162,7 @@ export const AccountCard = memo(function AccountCard({
             )}
           </div>
           {account.email && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+            <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
               <BlurredText blur={masked}>{account.email}</BlurredText>
             </p>
           )}
@@ -185,7 +185,7 @@ export const AccountCard = memo(function AccountCard({
           )}
           {/* Plan badge */}
           <span
-            className={`px-2.5 py-1 text-xs font-medium rounded-full border ${planColorClass}`}
+            className={`px-2 md:px-2.5 py-0.5 md:py-1 text-[10px] md:text-xs font-medium rounded-full border ${planColorClass}`}
           >
             {planDisplay}
           </span>
@@ -198,7 +198,7 @@ export const AccountCard = memo(function AccountCard({
       </div>
 
       {/* Last refresh time */}
-      <div className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+      <div className="text-[10px] md:text-xs text-gray-400 dark:text-gray-500 mb-3">
         Last updated: {formatLastRefresh(lastRefresh)}
       </div>
 
@@ -207,7 +207,7 @@ export const AccountCard = memo(function AccountCard({
         {account.is_active ? (
           <button
             disabled
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 border border-transparent cursor-default flex items-center justify-center gap-1.5"
+            className="flex-1 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium rounded-lg bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 border border-transparent cursor-default flex items-center justify-center gap-1.5"
           >
             <Check className="w-4 h-4" /> Active
           </button>
@@ -215,7 +215,7 @@ export const AccountCard = memo(function AccountCard({
           <button
             onClick={() => onSwitch(account.id)}
             disabled={switching || switchDisabled}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center ${
+            className={`flex-1 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center ${
               switchDisabled
                 ? "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 cursor-not-allowed"
                 : "bg-claude-text text-claude-bg hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white/90"
@@ -230,7 +230,7 @@ export const AccountCard = memo(function AccountCard({
             void onWarmup(account.id, account.name);
           }}
           disabled={warmingUp}
-          className={`px-3 py-2 flex items-center justify-center text-sm rounded-lg transition-colors ${
+          className={`px-2.5 md:px-3 py-1.5 md:py-2 flex items-center justify-center text-xs md:text-sm rounded-lg transition-colors ${
             warmingUp
               ? "bg-claude-accent/20 text-claude-accent"
               : "bg-claude-accent/10 hover:bg-claude-accent/20 text-claude-accent"
@@ -242,7 +242,7 @@ export const AccountCard = memo(function AccountCard({
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className={`px-3 py-2 flex items-center justify-center text-sm rounded-lg transition-colors ${
+          className={`px-2.5 md:px-3 py-1.5 md:py-2 flex items-center justify-center text-xs md:text-sm rounded-lg transition-colors ${
             isRefreshing
               ? "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40"
               : "bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-claude-text dark:text-claude-text-dark"
@@ -253,7 +253,7 @@ export const AccountCard = memo(function AccountCard({
         </button>
         <button
           onClick={() => onDelete(account.id)}
-          className="px-3 py-2 flex items-center justify-center text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors"
+          className="px-2.5 md:px-3 py-1.5 md:py-2 flex items-center justify-center text-xs md:text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors"
           title="Remove account"
         >
           <Trash2 className="w-4 h-4" />

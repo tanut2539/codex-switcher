@@ -64,7 +64,7 @@ function RateLimitBar({
 
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs text-claude-text/70 dark:text-claude-text-dark/70">
+      <div className="flex justify-between text-[10px] md:text-xs text-claude-text/70 dark:text-claude-text-dark/70">
         <span>{label} {windowLabel && `(${windowLabel})`}</span>
         <span>
           {remainingPercent.toFixed(0)}% left
@@ -88,7 +88,7 @@ export const UsageBar = memo(function UsageBar({ usage, loading }: UsageBarProps
   if (loading && !usage) {
     return (
       <div className="space-y-2">
-        <div className="text-xs text-claude-text/50 dark:text-claude-text-dark/50 italic animate-pulse">
+        <div className="text-[10px] md:text-xs text-claude-text/50 dark:text-claude-text-dark/50 italic animate-pulse">
           Fetching usage...
         </div>
         <div className="h-1.5 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden animate-pulse">
@@ -100,7 +100,7 @@ export const UsageBar = memo(function UsageBar({ usage, loading }: UsageBarProps
 
   if (!usage) {
     return (
-      <div className="text-xs text-claude-text/50 dark:text-claude-text-dark/50 italic py-1 animate-pulse">
+      <div className="text-[10px] md:text-xs text-claude-text/50 dark:text-claude-text-dark/50 italic py-1 animate-pulse">
         Fetching usage...
       </div>
     );
@@ -108,7 +108,7 @@ export const UsageBar = memo(function UsageBar({ usage, loading }: UsageBarProps
 
   if (usage.error) {
     return (
-      <div className="text-xs text-red-500/80 dark:text-red-400/80 italic py-1">
+      <div className="text-[10px] md:text-xs text-red-500/80 dark:text-red-400/80 italic py-1">
         {usage.error}
       </div>
     );
@@ -119,7 +119,7 @@ export const UsageBar = memo(function UsageBar({ usage, loading }: UsageBarProps
 
   if (!hasPrimary && !hasSecondary) {
     return (
-      <div className="text-xs text-claude-text/50 dark:text-claude-text-dark/50 italic py-1">
+      <div className="text-[10px] md:text-xs text-claude-text/50 dark:text-claude-text-dark/50 italic py-1">
         No rate limit data
       </div>
     );
@@ -144,7 +144,7 @@ export const UsageBar = memo(function UsageBar({ usage, loading }: UsageBarProps
         />
       )}
       {usage.credits_balance && (
-        <div className="text-xs text-claude-text/70 dark:text-claude-text-dark/70">
+        <div className="text-[10px] md:text-xs text-claude-text/70 dark:text-claude-text-dark/70">
           Credits: {usage.credits_balance}
         </div>
       )}

@@ -497,12 +497,12 @@ function App() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl font-bold text-claude-text dark:text-claude-text-dark tracking-tight">
+                  <h1 className="text-lg md:text-xl font-bold text-claude-text dark:text-claude-text-dark tracking-tight">
                     Codex Switcher
                   </h1>
                   {processInfo && (
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs border ${hasRunningProcesses
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] md:text-xs border ${hasRunningProcesses
                           ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700"
                           : "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700"
                         }`}
@@ -519,7 +519,7 @@ function App() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
                   Multi-account manager for Codex CLI
                 </p>
               </div>
@@ -557,7 +557,7 @@ function App() {
               <div className="relative" ref={actionsMenuRef}>
                 <button
                   onClick={() => setIsActionsMenuOpen((prev) => !prev)}
-                  className="h-10 px-4 py-2 text-sm font-medium rounded-lg flex items-center bg-claude-text text-claude-bg transition-colors hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white shrink-0 whitespace-nowrap shadow-sm"
+                  className="h-10 px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-lg flex items-center bg-claude-text text-claude-bg transition-colors hover:bg-claude-text/90 dark:bg-claude-text-dark dark:text-claude-bg-dark dark:hover:bg-white shrink-0 whitespace-nowrap shadow-sm"
                 >
                   Account <ChevronDown className="w-4 h-4 ml-1.5" />
                 </button>
@@ -625,7 +625,7 @@ function App() {
         {loading && accounts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin h-10 w-10 border-2 border-gray-900 dark:border-gray-100 border-t-transparent rounded-full mb-4"></div>
-            <p className="text-gray-500 dark:text-gray-400">Loading accounts...</p>
+            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">Loading accounts...</p>
           </div>
         ) : error ? (
           <div className="text-center py-20">
@@ -637,15 +637,15 @@ function App() {
             <div className="h-16 w-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
               <UserCircle2 className="w-8 h-8 text-gray-400 dark:text-gray-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               No accounts yet
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-6">
               Add your first Codex account to get started
             </p>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-6 py-3 text-sm font-medium rounded-lg bg-claude-accent hover:bg-claude-accent-hover text-white transition-colors shadow-sm"
+              className="px-5 md:px-6 py-2.5 md:py-3 text-xs md:text-sm font-medium rounded-lg bg-claude-accent hover:bg-claude-accent-hover text-white transition-colors shadow-sm"
             >
               Add Account
             </button>
@@ -655,7 +655,7 @@ function App() {
             {/* Active Account */}
             {activeAccount && (
               <section>
-                <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+                <h2 className="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
                   Active Account
                 </h2>
                 <AccountCard
@@ -678,10 +678,10 @@ function App() {
             {otherAccounts.length > 0 && (
               <section>
                 <div className="flex items-center justify-between gap-3 mb-4">
-                  <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <h2 className="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Other Accounts ({otherAccounts.length})
                   </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
                     Sorted by Weekly (7d), 5h, then A-Z
                   </p>
                 </div>
@@ -751,7 +751,7 @@ function App() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-2xl mx-4 shadow-xl">
             <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {configModalMode === "slim_export" ? "Export Slim Text" : "Import Slim Text"}
               </h2>
               <button
@@ -763,11 +763,11 @@ function App() {
             </div>
             <div className="p-5 space-y-4">
               {configModalMode === "slim_import" ? (
-                <p className="text-sm text-amber-700 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
+                <p className="text-xs md:text-sm text-amber-700 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
                   Existing accounts are kept. Only missing accounts are imported.
                 </p>
               ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                   This slim string contains account secrets. Keep it private.
                 </p>
               )}
@@ -785,7 +785,7 @@ function App() {
                 className="w-full h-48 px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 font-mono"
               />
               {configModalError && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-300 text-xs md:text-sm">
                   {configModalError}
                 </div>
               )}
@@ -793,7 +793,7 @@ function App() {
             <div className="flex gap-3 p-5 border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={() => setIsConfigModalOpen(false)}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                className="px-4 py-2.5 text-xs md:text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
               >
                 Close
               </button>
