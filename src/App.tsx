@@ -65,9 +65,6 @@ function App() {
     isError: boolean;
   } | null>(null);
   const [maskedAccounts, setMaskedAccounts] = useState<Set<string>>(new Set());
-  const [otherAccountsSort, setOtherAccountsSort] = useState<
-    "deadline_asc" | "deadline_desc" | "remaining_desc" | "remaining_asc"
-  >("remaining_asc");
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -410,63 +407,31 @@ function App() {
   const hasRunningProcesses = processInfo && processInfo.count > 0;
 
   const sortedOtherAccounts = useMemo(() => {
-    const getResetDeadline = (resetAt: number | null | undefined) =>
-      resetAt ?? Number.POSITIVE_INFINITY;
-
     const getRemainingPercent = (usedPercent: number | null | undefined) => {
       if (usedPercent === null || usedPercent === undefined) {
-        return Number.NEGATIVE_INFINITY;
+        return Number.POSITIVE_INFINITY;
       }
       return Math.max(0, 100 - usedPercent);
     };
 
     return [...otherAccounts].sort((a, b) => {
-      if (otherAccountsSort === "deadline_asc" || otherAccountsSort === "deadline_desc") {
-        const deadlineDiff =
-          getResetDeadline(a.usage?.primary_resets_at) -
-          getResetDeadline(b.usage?.primary_resets_at);
-        if (deadlineDiff !== 0) {
-          return otherAccountsSort === "deadline_asc" ? deadlineDiff : -deadlineDiff;
-        }
-        
-        const secRemA = getRemainingPercent(a.usage?.secondary_used_percent);
-        const secRemB = getRemainingPercent(b.usage?.secondary_used_percent);
-        if (secRemA !== secRemB) return secRemB - secRemA;
+      const weeklyDiff =
+        getRemainingPercent(a.usage?.secondary_used_percent) -
+        getRemainingPercent(b.usage?.secondary_used_percent);
+      if (weeklyDiff !== 0) return weeklyDiff;
 
-        const priRemA = getRemainingPercent(a.usage?.primary_used_percent);
-        const priRemB = getRemainingPercent(b.usage?.primary_used_percent);
-        if (priRemA !== priRemB) return priRemB - priRemA;
+      const fiveHourDiff =
+        getRemainingPercent(a.usage?.primary_used_percent) -
+        getRemainingPercent(b.usage?.primary_used_percent);
+      if (fiveHourDiff !== 0) return fiveHourDiff;
 
-        return a.name.localeCompare(b.name);
-      }
-
-      const secRemA = getRemainingPercent(a.usage?.secondary_used_percent);
-      const secRemB = getRemainingPercent(b.usage?.secondary_used_percent);
-      const secDiff = secRemB - secRemA;
-
-      const priRemA = getRemainingPercent(a.usage?.primary_used_percent);
-      const priRemB = getRemainingPercent(b.usage?.primary_used_percent);
-      const priDiff = priRemB - priRemA;
-
-      if (otherAccountsSort === "remaining_desc") {
-        if (secDiff !== 0) return secDiff;
-        if (priDiff !== 0) return priDiff;
-      } else if (otherAccountsSort === "remaining_asc") {
-        if (secDiff !== 0) return -secDiff;
-        if (priDiff !== 0) return -priDiff;
-      }
-      
-      const deadlineDiff =
-        getResetDeadline(a.usage?.primary_resets_at) -
-        getResetDeadline(b.usage?.primary_resets_at);
-      if (deadlineDiff !== 0) return deadlineDiff;
-      return a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
-  }, [otherAccounts, otherAccountsSort]);
+  }, [otherAccounts]);
 
   return (
     <div className="min-h-screen bg-claude-bg text-claude-text dark:bg-claude-bg-dark dark:text-claude-text-dark font-sans selection:bg-claude-accent/20">
-      <header className="sticky top-0 z-40 border-b border-black/5 bg-transparent dark:border-white/10">
+      <header className="sticky top-0 z-40 border-b border-black/5 bg-claude-bg dark:bg-claude-bg-dark dark:border-white/10">
         <div className="flex h-9 items-center px-3">
           <div
             onMouseDown={handleTitlebarDrag}
@@ -730,47 +695,9 @@ function App() {
                   <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Other Accounts ({otherAccounts.length})
                   </h2>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="other-accounts-sort" className="text-xs text-gray-500 dark:text-gray-400">
-                      Sort
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="other-accounts-sort"
-                        value={otherAccountsSort}
-                        onChange={(e) =>
-                          setOtherAccountsSort(
-                            e.target.value as
-                              | "deadline_asc"
-                              | "deadline_desc"
-                              | "remaining_desc"
-                              | "remaining_asc"
-                          )
-                        }
-                        className="appearance-none font-sans text-xs sm:text-sm font-medium pl-3 pr-9 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-claude-card-dark text-claude-text dark:text-claude-text-dark shadow-sm hover:border-black/20 dark:hover:border-white/20 hover:shadow focus:outline-none focus:ring-2 focus:ring-claude-accent transition-all"
-                      >
-                        <option value="deadline_asc">Reset: earliest to latest</option>
-                        <option value="deadline_desc">Reset: latest to earliest</option>
-                        <option value="remaining_desc">
-                          % remaining: highest to lowest
-                        </option>
-                        <option value="remaining_asc">
-                          % remaining: lowest to highest
-                        </option>
-                      </select>
-                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500 dark:text-gray-400">
-                        <svg
-                          className="h-4 w-4"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path d="M6 8l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </span>
-                    </div>
-                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Sorted by Weekly (7d), 5h, then A-Z
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                   {sortedOtherAccounts.map((account) => (
