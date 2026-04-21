@@ -74,11 +74,6 @@ pub fn add_account(account: StoredAccount) -> Result<StoredAccount> {
     let account_clone = account.clone();
     store.accounts.push(account);
 
-    // If this is the first account, make it active
-    if store.accounts.len() == 1 {
-        store.active_account_id = Some(account_clone.id.clone());
-    }
-
     save_accounts(&store)?;
     Ok(account_clone)
 }

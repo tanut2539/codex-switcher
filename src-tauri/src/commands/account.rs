@@ -473,10 +473,6 @@ async fn build_store_from_slim_payload(
             .map(|account| account.id.clone());
     }
 
-    if active_account_id.is_none() {
-        active_account_id = accounts.first().map(|a| a.id.clone());
-    }
-
     Ok(AccountsStore {
         version: 1,
         accounts,
@@ -707,11 +703,7 @@ fn merge_accounts_store(
         if let Some(imported_active) = imported_active_id {
             if current.accounts.iter().any(|a| a.id == imported_active) {
                 current.active_account_id = Some(imported_active);
-            } else {
-                current.active_account_id = current.accounts.first().map(|a| a.id.clone());
             }
-        } else {
-            current.active_account_id = current.accounts.first().map(|a| a.id.clone());
         }
     }
 
