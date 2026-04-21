@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useAccounts } from "./hooks/useAccounts";
 import { AccountCard, AddAccountModal, UpdateChecker, RefreshCountdownButton } from "./components";
-import { Minus, Square, Copy, X, Eye, EyeOff, RefreshCw, Zap, Sun, Moon, Check, UserCircle2, ChevronDown, Plus } from "lucide-react";
+import { Minus, Square, Copy, X, Eye, EyeOff, Zap, Sun, Moon, Check, UserCircle2, ChevronDown, Plus } from "lucide-react";
 import type { CodexProcessInfo } from "./types";
 import {
   exportFullBackupFile,
@@ -14,10 +13,14 @@ import "./App.css";
 
 const THEME_STORAGE_KEY = "codex-switcher-theme";
 type ThemeMode = "light" | "dark";
-const appWindow = getCurrentWindow();
 const isMacOs =
   typeof navigator !== "undefined" &&
   /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent);
+
+async function getAppWindow() {
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  return getCurrentWindow();
+}
 
 function App() {
   const {
@@ -78,18 +81,27 @@ function App() {
     }
   });
   const [isWindowMaximized, setIsWindowMaximized] = useState(false);
+  const showWindowControls = isTauriRuntime() && !isMacOs;
 
   const handleTitlebarDrag = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
       if (!isTauriRuntime() || event.button !== 0) return;
-      void appWindow.startDragging();
+      void getAppWindow()
+        .then((appWindow) => appWindow.startDragging())
+        .catch((err) => {
+          console.error("Failed to start window dragging:", err);
+        });
     },
     []
   );
 
   const handleTitlebarDoubleClick = useCallback(() => {
     if (!isTauriRuntime()) return;
-    void appWindow.toggleMaximize();
+    void getAppWindow()
+      .then((appWindow) => appWindow.toggleMaximize())
+      .catch((err) => {
+        console.error("Failed to toggle window maximize:", err);
+      });
   }, []);
 
   const toggleMask = useCallback((accountId: string) => {
@@ -195,9 +207,20 @@ function App() {
     if (!isTauriRuntime() || isMacOs) return;
 
     let unlisten: (() => void) | undefined;
+    let isMounted = true;
+    let currentWindowPromise: Promise<Awaited<ReturnType<typeof getAppWindow>>> | null = null;
+
+    const getWindow = () => {
+      if (!currentWindowPromise) {
+        currentWindowPromise = getAppWindow();
+      }
+      return currentWindowPromise;
+    };
 
     const syncMaximizedState = async () => {
       try {
+        const appWindow = await getWindow();
+        if (!isMounted) return;
         setIsWindowMaximized(await appWindow.isMaximized());
       } catch (err) {
         console.error("Failed to read window state:", err);
@@ -206,11 +229,17 @@ function App() {
 
     void syncMaximizedState();
 
-    appWindow
-      .onResized(() => {
-        void syncMaximizedState();
-      })
+    void getWindow()
+      .then((appWindow) =>
+        appWindow.onResized(() => {
+          void syncMaximizedState();
+        })
+      )
       .then((fn) => {
+        if (!isMounted) {
+          fn();
+          return;
+        }
         unlisten = fn;
       })
       .catch((err) => {
@@ -218,6 +247,7 @@ function App() {
       });
 
     return () => {
+      isMounted = false;
       unlisten?.();
     };
   }, []);
@@ -452,11 +482,15 @@ function App() {
             onDoubleClick={handleTitlebarDoubleClick}
             className={`h-full flex-1 select-none cursor-default ${isMacOs ? "ml-18 mr-2" : "mr-3"}`}
           />
-          {!isMacOs && (
+          {showWindowControls && (
             <div className="flex items-center gap-1">
               <button
                 onClick={() => {
-                  void appWindow.minimize();
+                  void getAppWindow()
+                    .then((appWindow) => appWindow.minimize())
+                    .catch((err) => {
+                      console.error("Failed to minimize window:", err);
+                    });
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                 title="Minimize"
@@ -465,7 +499,11 @@ function App() {
               </button>
               <button
                 onClick={() => {
-                  void appWindow.toggleMaximize();
+                  void getAppWindow()
+                    .then((appWindow) => appWindow.toggleMaximize())
+                    .catch((err) => {
+                      console.error("Failed to toggle window maximize:", err);
+                    });
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                 title={isWindowMaximized ? "Restore" : "Maximize"}
@@ -478,7 +516,11 @@ function App() {
               </button>
               <button
                 onClick={() => {
-                  void appWindow.close();
+                  void getAppWindow()
+                    .then((appWindow) => appWindow.close())
+                    .catch((err) => {
+                      console.error("Failed to close window:", err);
+                    });
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-500 hover:text-white dark:text-gray-400 dark:hover:bg-red-500 dark:hover:text-white"
                 title="Close"
