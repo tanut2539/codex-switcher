@@ -476,7 +476,7 @@ function App() {
   return (
     <div className="min-h-screen bg-claude-bg text-claude-text dark:bg-claude-bg-dark dark:text-claude-text-dark font-sans selection:bg-claude-accent/20">
       <header className="sticky top-0 z-40 border-b border-black/5 bg-claude-bg dark:bg-claude-bg-dark dark:border-white/10">
-        <div className="flex h-9 items-center px-3">
+        <div>
           <div
             onMouseDown={handleTitlebarDrag}
             onDoubleClick={handleTitlebarDoubleClick}
