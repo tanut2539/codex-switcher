@@ -82,7 +82,9 @@ function RateLimitBar({
   );
 }
 
-export function UsageBar({ usage, loading }: UsageBarProps) {
+import { memo } from "react";
+
+export const UsageBar = memo(function UsageBar({ usage, loading }: UsageBarProps) {
   if (loading && !usage) {
     return (
       <div className="space-y-2">
@@ -148,4 +150,4 @@ export function UsageBar({ usage, loading }: UsageBarProps) {
       )}
     </div>
   );
-}
+});

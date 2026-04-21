@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useAccounts } from "./hooks/useAccounts";
-import { AccountCard, AddAccountModal, UpdateChecker } from "./components";
+import { AccountCard, AddAccountModal, UpdateChecker, RefreshCountdownButton } from "./components";
 import { Minus, Square, Copy, X, Eye, EyeOff, RefreshCw, Zap, Sun, Moon, Check, UserCircle2, ChevronDown, Plus } from "lucide-react";
 import type { CodexProcessInfo } from "./types";
 import {
@@ -40,7 +40,6 @@ function App() {
     cancelOAuthLogin,
     loadMaskedAccountIds,
     saveMaskedAccountIds,
-    refreshCountdown,
   } = useAccounts();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -93,7 +92,7 @@ function App() {
     void appWindow.toggleMaximize();
   }, []);
 
-  const toggleMask = (accountId: string) => {
+  const toggleMask = useCallback((accountId: string) => {
     setMaskedAccounts((prev) => {
       const next = new Set(prev);
       if (next.has(accountId)) {
@@ -104,7 +103,7 @@ function App() {
       void saveMaskedAccountIds(Array.from(next));
       return next;
     });
-  };
+  }, [saveMaskedAccountIds]);
 
   const allMasked =
     accounts.length > 0 && accounts.every((account) => maskedAccounts.has(account.id));
@@ -223,7 +222,7 @@ function App() {
     };
   }, []);
 
-  const handleSwitch = async (accountId: string) => {
+  const handleSwitch = useCallback(async (accountId: string) => {
     // Check processes before switching
     await checkProcesses();
     if (processInfo && !processInfo.can_switch) {
@@ -238,9 +237,9 @@ function App() {
     } finally {
       setSwitchingId(null);
     }
-  };
+  }, [checkProcesses, processInfo, switchAccount]);
 
-  const handleDelete = async (accountId: string) => {
+  const handleDelete = useCallback(async (accountId: string) => {
     if (deleteConfirmId !== accountId) {
       setDeleteConfirmId(accountId);
       setTimeout(() => setDeleteConfirmId(null), 3000);
@@ -253,7 +252,7 @@ function App() {
     } catch (err) {
       console.error("Failed to delete account:", err);
     }
-  };
+  }, [deleteConfirmId, deleteAccount]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -267,10 +266,10 @@ function App() {
     }
   };
 
-  const showWarmupToast = (message: string, isError = false) => {
+  const showWarmupToast = useCallback((message: string, isError = false) => {
     setWarmupToast({ message, isError });
     setTimeout(() => setWarmupToast(null), 2500);
-  };
+  }, []);
 
   const formatWarmupError = (err: unknown) => {
     if (!err) return "Unknown error";
@@ -283,7 +282,7 @@ function App() {
     }
   };
 
-  const handleWarmupAccount = async (accountId: string, accountName: string) => {
+  const handleWarmupAccount = useCallback(async (accountId: string, accountName: string) => {
     try {
       setWarmingUpId(accountId);
       await warmupAccount(accountId);
@@ -297,7 +296,7 @@ function App() {
     } finally {
       setWarmingUpId(null);
     }
-  };
+  }, [warmupAccount, showWarmupToast]);
 
   const handleWarmupAll = async () => {
     try {
@@ -538,18 +537,7 @@ function App() {
                   <Eye className="w-4 h-4" />
                 )}
               </button>
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-claude-text transition-colors hover:bg-black/10 disabled:opacity-50 dark:bg-white/5 dark:text-claude-text-dark dark:hover:bg-white/10 shrink-0 overflow-hidden group"
-                title={isRefreshing ? "Refreshing all usage" : `Refresh all usage (${refreshCountdown}s)`}
-              >
-                <div 
-                  className={`absolute bottom-0 left-0 h-[3px] bg-claude-accent/80 dark:bg-claude-accent/80 ${isRefreshing ? "w-full animate-pulse" : "transition-all duration-1000 ease-linear"}`}
-                  style={{ width: isRefreshing ? "100%" : `${((30 - refreshCountdown) / 30) * 100}%` }}
-                />
-                <span className={`relative z-10 ${isRefreshing ? "animate-spin inline-block" : "group-hover:rotate-180 transition-transform duration-500"}`}><RefreshCw className="w-4 h-4" /></span>
-              </button>
+              <RefreshCountdownButton onRefresh={handleRefresh} isRefreshing={isRefreshing} />
               <button
                 onClick={handleWarmupAll}
                 disabled={isWarmingAll || accounts.length === 0}
@@ -672,18 +660,16 @@ function App() {
                 </h2>
                 <AccountCard
                   account={activeAccount}
-                  onSwitch={() => { }}
-                  onWarmup={() =>
-                    handleWarmupAccount(activeAccount.id, activeAccount.name)
-                  }
-                  onDelete={() => handleDelete(activeAccount.id)}
-                  onRefresh={() => refreshSingleUsage(activeAccount.id)}
-                  onRename={(newName) => renameAccount(activeAccount.id, newName)}
+                  onSwitch={handleSwitch}
+                  onWarmup={handleWarmupAccount}
+                  onDelete={handleDelete}
+                  onRefresh={refreshSingleUsage}
+                  onRename={renameAccount}
                   switching={switchingId === activeAccount.id}
                   switchDisabled={hasRunningProcesses ?? false}
                   warmingUp={isWarmingAll || warmingUpId === activeAccount.id}
                   masked={maskedAccounts.has(activeAccount.id)}
-                  onToggleMask={() => toggleMask(activeAccount.id)}
+                  onToggleMask={toggleMask}
                 />
               </section>
             )}
@@ -704,16 +690,16 @@ function App() {
                     <AccountCard
                       key={account.id}
                       account={account}
-                      onSwitch={() => handleSwitch(account.id)}
-                      onWarmup={() => handleWarmupAccount(account.id, account.name)}
-                      onDelete={() => handleDelete(account.id)}
-                      onRefresh={() => refreshSingleUsage(account.id)}
-                      onRename={(newName) => renameAccount(account.id, newName)}
+                      onSwitch={handleSwitch}
+                      onWarmup={handleWarmupAccount}
+                      onDelete={handleDelete}
+                      onRefresh={refreshSingleUsage}
+                      onRename={renameAccount}
                       switching={switchingId === account.id}
                       switchDisabled={hasRunningProcesses ?? false}
                       warmingUp={isWarmingAll || warmingUpId === account.id}
                       masked={maskedAccounts.has(account.id)}
-                      onToggleMask={() => toggleMask(account.id)}
+                      onToggleMask={toggleMask}
                     />
                   ))}
                 </div>

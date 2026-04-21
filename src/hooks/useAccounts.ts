@@ -353,51 +353,11 @@ export function useAccounts() {
     }
   }, []);
 
-  const [refreshCountdown, setRefreshCountdown] = useState(30);
-
+  // We now trigger the initial load on mount here.
   useEffect(() => {
-    let isSubscribed = true;
-    let countdownInterval: ReturnType<typeof setInterval> | undefined;
-
-    const startCountdown = () => {
-      if (countdownInterval) clearInterval(countdownInterval);
-      setRefreshCountdown(30);
-      
-      countdownInterval = setInterval(() => {
-        setRefreshCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(countdownInterval);
-            poll();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    };
-
-    const poll = async () => {
-      if (!isSubscribed) return;
-      try {
-        await refreshUsage();
-      } catch (err) {
-        // ignore auto-refresh errors
-      }
-      if (!isSubscribed) return;
-      startCountdown();
-    };
-
     loadAccounts()
       .then((accountList) => refreshUsage(accountList))
-      .catch(() => {})
-      .finally(() => {
-        if (!isSubscribed) return;
-        startCountdown();
-      });
-    
-    return () => {
-      isSubscribed = false;
-      if (countdownInterval) clearInterval(countdownInterval);
-    };
+      .catch(() => {});
   }, [loadAccounts, refreshUsage]);
 
   return {
@@ -422,6 +382,5 @@ export function useAccounts() {
     cancelOAuthLogin,
     loadMaskedAccountIds,
     saveMaskedAccountIds,
-    refreshCountdown,
   };
 }

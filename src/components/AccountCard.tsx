@@ -1,20 +1,20 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import type { AccountWithUsage } from "../types";
 import { UsageBar } from "./UsageBar";
 import { Check, Zap, RefreshCw, Trash2, Eye, EyeOff } from "lucide-react";
 
 interface AccountCardProps {
   account: AccountWithUsage;
-  onSwitch: () => void;
-  onWarmup: () => Promise<void>;
-  onDelete: () => void;
-  onRefresh: () => Promise<void>;
-  onRename: (newName: string) => Promise<void>;
+  onSwitch: (id: string) => void;
+  onWarmup: (id: string, name: string) => Promise<void>;
+  onDelete: (id: string) => void;
+  onRefresh: (id: string) => Promise<void>;
+  onRename: (id: string, newName: string) => Promise<void>;
   switching?: boolean;
   switchDisabled?: boolean;
   warmingUp?: boolean;
   masked?: boolean;
-  onToggleMask?: () => void;
+  onToggleMask?: (id: string) => void;
 }
 
 function formatLastRefresh(date: Date | null): string {
@@ -39,7 +39,7 @@ function BlurredText({ children, blur }: { children: React.ReactNode; blur: bool
   );
 }
 
-export function AccountCard({
+export const AccountCard = memo(function AccountCard({
   account,
   onSwitch,
   onWarmup,
@@ -70,7 +70,7 @@ export function AccountCard({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await onRefresh();
+      await onRefresh(account.id);
       setLastRefresh(new Date());
     } finally {
       setIsRefreshing(false);
@@ -81,7 +81,7 @@ export function AccountCard({
     const trimmed = editName.trim();
     if (trimmed && trimmed !== account.name) {
       try {
-        await onRename(trimmed);
+        await onRename(account.id, trimmed);
       } catch {
         setEditName(account.name);
       }
@@ -172,7 +172,7 @@ export function AccountCard({
           {/* Eye toggle */}
           {onToggleMask && (
             <button
-              onClick={onToggleMask}
+              onClick={() => onToggleMask(account.id)}
               className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               title={masked ? "Show info" : "Hide info"}
             >
@@ -213,7 +213,7 @@ export function AccountCard({
           </button>
         ) : (
           <button
-            onClick={onSwitch}
+            onClick={() => onSwitch(account.id)}
             disabled={switching || switchDisabled}
             className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center ${
               switchDisabled
@@ -227,7 +227,7 @@ export function AccountCard({
         )}
         <button
           onClick={() => {
-            void onWarmup();
+            void onWarmup(account.id, account.name);
           }}
           disabled={warmingUp}
           className={`px-3 py-2 flex items-center justify-center text-sm rounded-lg transition-colors ${
@@ -252,7 +252,7 @@ export function AccountCard({
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
         </button>
         <button
-          onClick={onDelete}
+          onClick={() => onDelete(account.id)}
           className="px-3 py-2 flex items-center justify-center text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors"
           title="Remove account"
         >
@@ -261,4 +261,4 @@ export function AccountCard({
       </div>
     </div>
   );
-}
+});
