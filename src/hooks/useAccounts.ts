@@ -13,7 +13,6 @@ export function useAccounts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const accountsRef = useRef<AccountWithUsage[]>([]);
-  const maxConcurrentUsageRequests = 10;
 
   useEffect(() => {
     accountsRef.current = accounts;
@@ -34,27 +33,6 @@ export function useAccounts() {
       credits_balance: null,
       error: message,
     }),
-    []
-  );
-
-  const runWithConcurrency = useCallback(
-    async <T,>(
-      items: T[],
-      worker: (item: T) => Promise<void>,
-      concurrency: number
-    ) => {
-      if (items.length === 0) return;
-      const limit = Math.min(Math.max(concurrency, 1), items.length);
-      let index = 0;
-      const runners = Array.from({ length: limit }, async () => {
-        while (true) {
-          const current = index++;
-          if (current >= items.length) return;
-          await worker(items[current]);
-        }
-      });
-      await Promise.allSettled(runners);
-    },
     []
   );
 
@@ -98,7 +76,6 @@ export function useAccounts() {
 
         const accountIds = list.map((account) => account.id);
         const accountIdSet = new Set(accountIds);
-        const usageResults = new Map<string, UsageInfo>();
 
         setAccounts((prev) =>
           prev.map((account) =>
@@ -108,30 +85,21 @@ export function useAccounts() {
           )
         );
 
-        await runWithConcurrency(
-          list,
-          async (account) => {
-            try {
-              const usage = await invokeBackend<UsageInfo>("get_usage", {
-                accountId: account.id,
-              });
-              usageResults.set(account.id, usage);
-            } catch (err) {
-              console.error("Failed to refresh usage:", err);
-              const message = err instanceof Error ? err.message : String(err);
-              usageResults.set(
-                account.id,
-                buildUsageError(account.id, message, account.plan_type ?? null)
-              );
-            }
-          },
-          maxConcurrentUsageRequests
-        );
+        const allUsages = await invokeBackend<UsageInfo[]>("refresh_all_accounts_usage");
+        
+        const usageResults = new Map<string, UsageInfo>();
+        for (const usage of allUsages) {
+          usageResults.set(usage.account_id, usage);
+        }
 
         setAccounts((prev) =>
           prev.map((account) => {
             const usage = usageResults.get(account.id);
-            if (!usage) return account;
+            if (!usage) {
+              return accountIdSet.has(account.id)
+                ? { ...account, usageLoading: false }
+                : account;
+            }
             return {
               ...account,
               usage,
@@ -144,7 +112,7 @@ export function useAccounts() {
         throw err;
       }
     },
-    [buildUsageError, maxConcurrentUsageRequests, runWithConcurrency]
+    []
   );
 
   const refreshSingleUsage = useCallback(async (accountId: string) => {
