@@ -23,14 +23,6 @@
     ],
     "security": {
       "csp": null
-    },
-    "trayIcon": {
-      "id": "main",
-      "iconPath": "icons/32x32.png",
-      "iconAsTemplate": false,
-      "menuOnLeftClick": false,
-      "title": "Codex Switcher",
-      "tooltip": "Codex Switcher"
     }
   },
   "bundle": {
