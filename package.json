@@ -9,6 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "sh ./scripts/tauri.sh",
+    "tauri:build": "sh ./scripts/tauri.sh build",
     "lan": "pnpm build && cargo run --manifest-path src-tauri/Cargo.toml --bin codex-web",
     "version:bump": "node scripts/bump-version.mjs",
     "version:patch": "node scripts/bump-version.mjs patch",
@@ -17,7 +18,9 @@
     "release": "node scripts/release.mjs",
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
-    "release:major": "node scripts/release.mjs major"
+    "release:major": "node scripts/release.mjs major",
+    "agent:install": "sh ./scripts/install-launch-agent.sh",
+    "agent:uninstall": "sh ./scripts/uninstall-launch-agent.sh"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.0",
