@@ -17,6 +17,14 @@ const isMacOs =
   typeof navigator !== "undefined" &&
   /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent);
 
+/** Fire-and-forget tray refresh — safe to call from any context */
+function triggerTrayRefresh() {
+  if (!isTauriRuntime()) return;
+  void invokeBackend("trigger_tray_refresh").catch(() => {
+    // Non-critical — ignore failures
+  });
+}
+
 async function getAppWindow() {
   const { getCurrentWindow } = await import("@tauri-apps/api/window");
   return getCurrentWindow();
@@ -262,6 +270,8 @@ function App() {
     try {
       setSwitchingId(accountId);
       await switchAccount(accountId);
+      // Keep tray in sync with new active account
+      triggerTrayRefresh();
     } catch (err) {
       console.error("Failed to switch account:", err);
     } finally {
@@ -291,6 +301,8 @@ function App() {
       await refreshUsage();
       setRefreshSuccess(true);
       setTimeout(() => setRefreshSuccess(false), 2000);
+      // Keep tray icon in sync after usage refresh
+      triggerTrayRefresh();
     } finally {
       setIsRefreshing(false);
     }

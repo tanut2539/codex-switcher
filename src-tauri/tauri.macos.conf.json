@@ -3,6 +3,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Codex Switcher",
         "width": 900,
         "height": 700,
@@ -14,7 +15,8 @@
         "trafficLightPosition": {
           "x": 14,
           "y": 16
-        }
+        },
+        "visible": false
       }
     ]
   }
