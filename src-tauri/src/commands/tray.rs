@@ -73,9 +73,7 @@ pub fn build_tooltip(status: &TrayStatus) -> String {
         .as_deref()
         .unwrap_or("No active account");
 
-    let remaining = status
-        .secondary_remaining_pct
-        .or(status.primary_remaining_pct);
+    let remaining = status.primary_remaining_pct;
 
     match remaining {
         Some(pct) => format!("{name} — {:.0}% remaining", pct),
@@ -90,9 +88,7 @@ pub fn build_menu_title(status: &TrayStatus) -> String {
         .as_deref()
         .unwrap_or("No active account");
 
-    let remaining = status
-        .secondary_remaining_pct
-        .or(status.primary_remaining_pct);
+    let remaining = status.primary_remaining_pct;
 
     match remaining {
         Some(pct) => format!("{name}  {:.0}%", pct),
@@ -195,9 +191,7 @@ pub async fn refresh_tray(app: &AppHandle) {
 
     let tooltip = build_tooltip(&status);
 
-    let remaining = status
-        .secondary_remaining_pct
-        .or(status.primary_remaining_pct);
+    let remaining = status.primary_remaining_pct;
 
     let icon_bytes = generate_tray_icon_png(remaining);
 
