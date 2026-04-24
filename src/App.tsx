@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAccounts } from "./hooks/useAccounts";
 import { AccountCard, AddAccountModal, UpdateChecker, RefreshCountdownButton } from "./components";
 import { Minus, Square, Copy, X, Eye, EyeOff, Zap, Sun, Moon, Check, UserCircle2, ChevronDown, Plus } from "lucide-react";
-import type { CodexProcessInfo } from "./types";
+import type { CodexProcessInfo, AccountWithUsage } from "./types";
 import {
   exportFullBackupFile,
   importFullBackupFile,
@@ -158,23 +158,48 @@ function App() {
     }
   }, []);
 
-  // Check processes on mount and periodically
+  // Check processes on mount, periodically, and on focus
   useEffect(() => {
     let isSubscribed = true;
     let timeoutId: ReturnType<typeof setTimeout>;
+    let isPolling = false;
 
     const poll = async () => {
       if (!isSubscribed) return;
-      await checkProcesses();
-      if (!isSubscribed) return;
-      timeoutId = setTimeout(poll, 3000);
+      if (isPolling) return; // Prevent concurrent overlapping requests
+      
+      isPolling = true;
+      try {
+        await checkProcesses();
+      } finally {
+        isPolling = false;
+        if (isSubscribed) {
+          // Fast polling when active, very slow when hidden to save resources
+          const isVisible = document.visibilityState === "visible";
+          const delay = isVisible ? 1500 : 10000;
+          timeoutId = setTimeout(poll, delay);
+        }
+      }
     };
 
     void poll();
 
+    const handleVisibilityOrFocus = () => {
+      // Trigger an immediate check if we just became visible or focused
+      if (document.visibilityState === "visible") {
+        clearTimeout(timeoutId);
+        void poll();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
     return () => {
       isSubscribed = false;
       clearTimeout(timeoutId);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
     };
   }, [checkProcesses]);
 
@@ -463,23 +488,38 @@ function App() {
   const hasRunningProcesses = processInfo && processInfo.count > 0;
 
   const sortedOtherAccounts = useMemo(() => {
-    const getRemainingPercent = (usedPercent: number | null | undefined) => {
-      if (usedPercent === null || usedPercent === undefined) {
-        return Number.POSITIVE_INFINITY;
-      }
-      return Math.max(0, 100 - usedPercent);
-    };
-
     return [...otherAccounts].sort((a, b) => {
-      const weeklyDiff =
-        getRemainingPercent(a.usage?.secondary_used_percent) -
-        getRemainingPercent(b.usage?.secondary_used_percent);
-      if (weeklyDiff !== 0) return weeklyDiff;
+      const getAvailabilityScore = (acc: AccountWithUsage) => {
+        if (!acc.usage) return -100;
+        if (acc.usage.error) return -200;
+        if (acc.usage.has_credits === false) return -50;
 
-      const fiveHourDiff =
-        getRemainingPercent(a.usage?.primary_used_percent) -
-        getRemainingPercent(b.usage?.primary_used_percent);
-      if (fiveHourDiff !== 0) return fiveHourDiff;
+        const primary = acc.usage.primary_used_percent ?? 0;
+        const secondary = acc.usage.secondary_used_percent ?? 0;
+
+        if (primary >= 100 || secondary >= 100) return -10;
+
+        // Prioritize accounts with the most remaining quota (lowest usage)
+        // We use the maximum of their primary and secondary usage as the bottleneck
+        return 100 - Math.max(primary, secondary);
+      };
+
+      const scoreA = getAvailabilityScore(a);
+      const scoreB = getAvailabilityScore(b);
+
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA; // Highest score (most available) first
+      }
+
+      // Tie-breaker: lowest primary usage first
+      const primaryA = a.usage?.primary_used_percent ?? 0;
+      const primaryB = b.usage?.primary_used_percent ?? 0;
+      if (primaryA !== primaryB) return primaryA - primaryB;
+
+      // Tie-breaker: lowest secondary usage first
+      const secondaryA = a.usage?.secondary_used_percent ?? 0;
+      const secondaryB = b.usage?.secondary_used_percent ?? 0;
+      if (secondaryA !== secondaryB) return secondaryA - secondaryB;
 
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
@@ -556,19 +596,24 @@ function App() {
                   </h1>
                   {processInfo && (
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] md:text-xs border ${hasRunningProcesses
-                          ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700"
-                          : "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] md:text-xs font-medium border shadow-sm transition-colors ${hasRunningProcesses
+                          ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700/50"
+                          : "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700/50"
                         }`}
                     >
-                      <span
-                        className={`inline-block w-1.5 h-1.5 rounded-full ${hasRunningProcesses ? "bg-amber-500" : "bg-green-500"
-                          }`}
-                      ></span>
+                      <span className="relative flex h-2 w-2">
+                        {hasRunningProcesses && (
+                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        )}
+                        <span
+                          className={`relative inline-flex rounded-full h-2 w-2 ${hasRunningProcesses ? "bg-amber-500" : "bg-emerald-500"
+                            }`}
+                        ></span>
+                      </span>
                       <span>
                         {hasRunningProcesses
-                          ? `${processInfo.count} Codex running`
-                          : "0 Codex running"}
+                          ? `${processInfo.count} Process${processInfo.count !== 1 ? 'es' : ''} Active`
+                          : "System Ready"}
                       </span>
                     </span>
                   )}
@@ -736,7 +781,7 @@ function App() {
                     Other Accounts ({otherAccounts.length})
                   </h2>
                   <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
-                    Sorted by Weekly (7d), 5h, then A-Z
+                    Sorted by Most Available Quota, then A-Z
                   </p>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
