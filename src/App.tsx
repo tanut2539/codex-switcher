@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { useAccounts } from "./hooks/useAccounts";
 import { AccountCard, AddAccountModal, UpdateChecker, RefreshCountdownButton } from "./components";
 import { Minus, Square, Copy, X, Eye, EyeOff, Zap, Sun, Moon, Check, UserCircle2, ChevronDown, Plus } from "lucide-react";
@@ -72,10 +73,6 @@ function App() {
   const [isWarmingAll, setIsWarmingAll] = useState(false);
   const [warmingUpId, setWarmingUpId] = useState<string | null>(null);
   const [refreshSuccess, setRefreshSuccess] = useState(false);
-  const [warmupToast, setWarmupToast] = useState<{
-    message: string;
-    isError: boolean;
-  } | null>(null);
   const [maskedAccounts, setMaskedAccounts] = useState<Set<string>>(new Set());
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
@@ -171,6 +168,8 @@ function App() {
       isPolling = true;
       try {
         await checkProcesses();
+        await loadAccounts(true);
+        await refreshUsage(undefined, true);
       } finally {
         isPolling = false;
         if (isSubscribed) {
@@ -334,8 +333,11 @@ function App() {
   };
 
   const showWarmupToast = useCallback((message: string, isError = false) => {
-    setWarmupToast({ message, isError });
-    setTimeout(() => setWarmupToast(null), 2500);
+    if (isError) {
+      toast.error(message);
+    } else {
+      toast.success(message);
+    }
   }, []);
 
   const formatWarmupError = (err: unknown) => {
@@ -506,11 +508,11 @@ function App() {
 
       if (catA !== catB) return catA - catB; // Lower category (1) comes first
 
-      // 1. Sort by soonest weekly reset (secondary_resets_at)
-      const resetA = a.usage?.secondary_resets_at ?? Number.POSITIVE_INFINITY;
-      const resetB = b.usage?.secondary_resets_at ?? Number.POSITIVE_INFINITY;
+      // 1. Sort by longest time until weekly reset first
+      const resetA = a.usage?.secondary_resets_at ?? 0;
+      const resetB = b.usage?.secondary_resets_at ?? 0;
 
-      if (resetA !== resetB) return resetA - resetB;
+      if (resetA !== resetB) return resetB - resetA;
 
       // 2. Sort by most available quota
       const getAvailabilityScore = (acc: AccountWithUsage) => {
@@ -830,18 +832,7 @@ function App() {
         </div>
       )}
 
-      {/* Warm-up Toast */}
-      {warmupToast && (
-        <div
-          className={`fixed bottom-20 left-1/2 -translate-x-1/2 px-4 py-3 rounded-lg shadow-lg text-sm ${
-            warmupToast.isError
-              ? "bg-red-600 text-white"
-              : "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700"
-          }`}
-        >
-          {warmupToast.message}
-        </div>
-      )}
+
 
       {/* Delete Confirmation Toast */}
       {deleteConfirmId && (

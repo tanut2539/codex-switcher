@@ -67,7 +67,7 @@ export function useAccounts() {
   }, []);
 
   const refreshUsage = useCallback(
-    async (accountList?: AccountInfo[] | AccountWithUsage[]) => {
+    async (accountList?: AccountInfo[] | AccountWithUsage[], silent = false) => {
       try {
         const list = accountList ?? accountsRef.current;
         if (list.length === 0) {
@@ -77,13 +77,15 @@ export function useAccounts() {
         const accountIds = list.map((account) => account.id);
         const accountIdSet = new Set(accountIds);
 
-        setAccounts((prev) =>
-          prev.map((account) =>
-            accountIdSet.has(account.id)
-              ? { ...account, usageLoading: true }
-              : account
-          )
-        );
+        if (!silent) {
+          setAccounts((prev) =>
+            prev.map((account) =>
+              accountIdSet.has(account.id)
+                ? { ...account, usageLoading: true }
+                : account
+            )
+          );
+        }
 
         const allUsages = await invokeBackend<UsageInfo[]>("refresh_all_accounts_usage");
         
@@ -96,7 +98,7 @@ export function useAccounts() {
           prev.map((account) => {
             const usage = usageResults.get(account.id);
             if (!usage) {
-              return accountIdSet.has(account.id)
+              return accountIdSet.has(account.id) && !silent
                 ? { ...account, usageLoading: false }
                 : account;
             }
