@@ -489,18 +489,33 @@ function App() {
 
   const sortedOtherAccounts = useMemo(() => {
     return [...otherAccounts].sort((a, b) => {
-      const getAvailabilityScore = (acc: AccountWithUsage) => {
-        if (!acc.usage) return -100;
-        if (acc.usage.error) return -200;
-        if (acc.usage.has_credits === false) return -50;
+      const getCategory = (acc: AccountWithUsage) => {
+        if (!acc.usage) return 4;
+        if (acc.usage.error) return 5;
+        if (acc.usage.has_credits === false) return 3;
 
         const primary = acc.usage.primary_used_percent ?? 0;
         const secondary = acc.usage.secondary_used_percent ?? 0;
+        if (primary >= 100 || secondary >= 100) return 2;
 
-        if (primary >= 100 || secondary >= 100) return -10;
+        return 1; // Available
+      };
 
-        // Prioritize accounts with the most remaining quota (lowest usage)
-        // We use the maximum of their primary and secondary usage as the bottleneck
+      const catA = getCategory(a);
+      const catB = getCategory(b);
+
+      if (catA !== catB) return catA - catB; // Lower category (1) comes first
+
+      // 1. Sort by soonest weekly reset (secondary_resets_at)
+      const resetA = a.usage?.secondary_resets_at ?? Number.POSITIVE_INFINITY;
+      const resetB = b.usage?.secondary_resets_at ?? Number.POSITIVE_INFINITY;
+
+      if (resetA !== resetB) return resetA - resetB;
+
+      // 2. Sort by most available quota
+      const getAvailabilityScore = (acc: AccountWithUsage) => {
+        const primary = acc.usage?.primary_used_percent ?? 0;
+        const secondary = acc.usage?.secondary_used_percent ?? 0;
         return 100 - Math.max(primary, secondary);
       };
 
@@ -781,7 +796,7 @@ function App() {
                     Other Accounts ({otherAccounts.length})
                   </h2>
                   <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
-                    Sorted by Most Available Quota, then A-Z
+                    Sorted by Soonest Weekly Reset, then Most Available Quota, then A-Z
                   </p>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
