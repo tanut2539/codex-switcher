@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { UsageInfo } from "../types";
 
 interface UsageBarProps {
@@ -5,14 +6,21 @@ interface UsageBarProps {
   loading?: boolean;
 }
 
-function formatResetTime(resetAt: number | null | undefined): string {
+function formatRelativeResetTime(resetAt: number | null | undefined): string {
   if (!resetAt) return "";
   const now = Math.floor(Date.now() / 1000);
   const diff = resetAt - now;
   if (diff <= 0) return "now";
   if (diff < 60) return `${diff}s`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}m`;
+
+  const totalHours = Math.floor(diff / 3600);
+  const minutes = Math.floor((diff % 3600) / 60);
+  if (totalHours < 24) return `${totalHours}h ${minutes}m`;
+
+  const days = Math.floor(totalHours / 24);
+  const remainingHours = totalHours % 24;
+  return `${days}d ${remainingHours}h (${totalHours}h total)`;
 }
 
 function formatExactResetTime(resetAt: number | null | undefined): string {
@@ -26,6 +34,15 @@ function formatExactResetTime(resetAt: number | null | undefined): string {
   const hour12 = date.getHours() % 12 || 12;
 
   return `${month} ${day}, ${hour12}:${minutes} ${period}`;
+}
+
+function formatResetLabel(resetAt: number | null | undefined): string {
+  const relative = formatRelativeResetTime(resetAt);
+  if (!relative) return "";
+
+  const exact = formatExactResetTime(resetAt);
+  const prefix = relative === "now" ? "resets" : "resets in";
+  return exact ? `${prefix} ${relative} • ${exact}` : `${prefix} ${relative}`;
 }
 
 function formatWindowDuration(minutes: number | null | undefined): string {
@@ -59,17 +76,15 @@ function RateLimitBar({
         : "bg-claude-accent";
 
   const windowLabel = formatWindowDuration(windowMinutes);
-  const resetLabel = formatResetTime(resetsAt);
-  const exactResetLabel = formatExactResetTime(resetsAt);
+  const resetLabel = formatResetLabel(resetsAt);
 
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-[10px] md:text-xs text-claude-text/70 dark:text-claude-text-dark/70">
+      <div className="flex flex-col gap-0.5 text-[10px] md:text-xs text-claude-text/70 dark:text-claude-text-dark/70 sm:flex-row sm:items-baseline sm:justify-between">
         <span>{label} {windowLabel && `(${windowLabel})`}</span>
-        <span>
+        <span className="sm:text-right">
           {remainingPercent.toFixed(0)}% left
-          {resetLabel && ` • resets ${resetLabel}`}
-          {resetLabel && exactResetLabel && ` (${exactResetLabel})`}
+          {resetLabel && ` • ${resetLabel}`}
         </span>
       </div>
       <div className="h-1.5 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden">
@@ -81,8 +96,6 @@ function RateLimitBar({
     </div>
   );
 }
-
-import { memo } from "react";
 
 export const UsageBar = memo(function UsageBar({ usage, loading }: UsageBarProps) {
   if (loading && !usage) {

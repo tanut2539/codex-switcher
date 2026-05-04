@@ -31,6 +31,68 @@ async function getAppWindow() {
   return getCurrentWindow();
 }
 
+const UNKNOWN_LIMIT_REMAINING = Number.POSITIVE_INFINITY;
+
+function compareAscending(left: number, right: number) {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
+}
+
+function remainingLimitPercent(usedPercent: number | null | undefined) {
+  if (usedPercent === null || usedPercent === undefined || Number.isNaN(usedPercent)) {
+    return UNKNOWN_LIMIT_REMAINING;
+  }
+
+  return Math.max(0, 100 - Math.min(100, usedPercent));
+}
+
+function usageSortRank(account: AccountWithUsage) {
+  if (!account.usage) return 2;
+  if (account.usage.error) return 3;
+  if (account.usage.has_credits === false) return 0;
+  return 1;
+}
+
+function nextReachedLimitRemaining(account: AccountWithUsage) {
+  const usage = account.usage;
+  if (!usage || usage.error) return UNKNOWN_LIMIT_REMAINING;
+  if (usage.has_credits === false) return 0;
+
+  return Math.min(
+    remainingLimitPercent(usage.primary_used_percent),
+    remainingLimitPercent(usage.secondary_used_percent),
+  );
+}
+
+function compareAccountLimitOrder(a: AccountWithUsage, b: AccountWithUsage) {
+  const rank = compareAscending(usageSortRank(a), usageSortRank(b));
+  if (rank !== 0) return rank;
+
+  const nextLimit = compareAscending(
+    nextReachedLimitRemaining(a),
+    nextReachedLimitRemaining(b),
+  );
+  if (nextLimit !== 0) return nextLimit;
+
+  const primaryLimit = compareAscending(
+    remainingLimitPercent(a.usage?.primary_used_percent),
+    remainingLimitPercent(b.usage?.primary_used_percent),
+  );
+  if (primaryLimit !== 0) return primaryLimit;
+
+  const secondaryLimit = compareAscending(
+    remainingLimitPercent(a.usage?.secondary_used_percent),
+    remainingLimitPercent(b.usage?.secondary_used_percent),
+  );
+  if (secondaryLimit !== 0) return secondaryLimit;
+
+  return a.name.localeCompare(b.name, undefined, {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
 function App() {
   const {
     accounts,
@@ -168,8 +230,8 @@ function App() {
       isPolling = true;
       try {
         await checkProcesses();
-        await loadAccounts(true);
-        await refreshUsage(undefined, true);
+        const accountList = await loadAccounts(true);
+        await refreshUsage(accountList, true);
       } finally {
         isPolling = false;
         if (isSubscribed) {
@@ -200,7 +262,7 @@ function App() {
       document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
       window.removeEventListener("focus", handleVisibilityOrFocus);
     };
-  }, [checkProcesses]);
+  }, [checkProcesses, loadAccounts, refreshUsage]);
 
   // Load masked accounts from storage on mount
   useEffect(() => {
@@ -490,56 +552,7 @@ function App() {
   const hasRunningProcesses = processInfo && processInfo.count > 0;
 
   const sortedOtherAccounts = useMemo(() => {
-    return [...otherAccounts].sort((a, b) => {
-      const getCategory = (acc: AccountWithUsage) => {
-        if (!acc.usage) return 4;
-        if (acc.usage.error) return 5;
-        if (acc.usage.has_credits === false) return 3;
-
-        const primary = acc.usage.primary_used_percent ?? 0;
-        const secondary = acc.usage.secondary_used_percent ?? 0;
-        if (primary >= 100 || secondary >= 100) return 2;
-
-        return 1; // Available
-      };
-
-      const catA = getCategory(a);
-      const catB = getCategory(b);
-
-      if (catA !== catB) return catA - catB; // Lower category (1) comes first
-
-      // 1. Sort by longest time until weekly reset first
-      const resetA = a.usage?.secondary_resets_at ?? 0;
-      const resetB = b.usage?.secondary_resets_at ?? 0;
-
-      if (resetA !== resetB) return resetB - resetA;
-
-      // 2. Sort by most available quota
-      const getAvailabilityScore = (acc: AccountWithUsage) => {
-        const primary = acc.usage?.primary_used_percent ?? 0;
-        const secondary = acc.usage?.secondary_used_percent ?? 0;
-        return 100 - Math.max(primary, secondary);
-      };
-
-      const scoreA = getAvailabilityScore(a);
-      const scoreB = getAvailabilityScore(b);
-
-      if (scoreA !== scoreB) {
-        return scoreB - scoreA; // Highest score (most available) first
-      }
-
-      // Tie-breaker: lowest primary usage first
-      const primaryA = a.usage?.primary_used_percent ?? 0;
-      const primaryB = b.usage?.primary_used_percent ?? 0;
-      if (primaryA !== primaryB) return primaryA - primaryB;
-
-      // Tie-breaker: lowest secondary usage first
-      const secondaryA = a.usage?.secondary_used_percent ?? 0;
-      const secondaryB = b.usage?.secondary_used_percent ?? 0;
-      if (secondaryA !== secondaryB) return secondaryA - secondaryB;
-
-      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-    });
+    return [...otherAccounts].sort(compareAccountLimitOrder);
   }, [otherAccounts]);
 
   return (
@@ -600,7 +613,7 @@ function App() {
           )}
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="w-full max-w-[1800px] mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_max-content] md:items-center md:gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="h-10 w-10 rounded-xl bg-claude-accent flex items-center justify-center text-white font-bold text-lg shadow-sm">
@@ -737,7 +750,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="w-full max-w-[1800px] mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {loading && accounts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin h-10 w-10 border-2 border-gray-900 dark:border-gray-100 border-t-transparent rounded-full mb-4"></div>
@@ -793,15 +806,15 @@ function App() {
             {/* Other Accounts */}
             {otherAccounts.length > 0 && (
               <section>
-                <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="grid gap-1.5 mb-4 sm:grid-cols-[minmax(0,1fr)_max-content] sm:items-end sm:gap-4">
                   <h2 className="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Other Accounts ({otherAccounts.length})
                   </h2>
-                  <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
-                    Sorted by Soonest Weekly Reset, then Most Available Quota, then A-Z
+                  <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 sm:text-right">
+                    Sorted by next limit reached, 5h, weekly, then A-Z
                   </p>
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-4">
                   {sortedOtherAccounts.map((account) => (
                     <AccountCard
                       key={account.id}

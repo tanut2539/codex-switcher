@@ -3,7 +3,9 @@
 use anyhow::{Context, Result};
 use futures::{stream, StreamExt};
 use reqwest::{
-    header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, USER_AGENT},
+    header::{
+        HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, CACHE_CONTROL, PRAGMA, USER_AGENT,
+    },
     StatusCode,
 };
 use serde_json::{json, Value};
@@ -29,6 +31,7 @@ pub async fn get_account_usage(account: &StoredAccount) -> Result<UsageInfo> {
             Ok(UsageInfo {
                 account_id: account.id.clone(),
                 plan_type: Some("api_key".to_string()),
+                refreshed_at: chrono::Utc::now().timestamp(),
                 primary_used_percent: None,
                 primary_window_minutes: None,
                 primary_resets_at: None,
@@ -126,8 +129,7 @@ async fn warmup_with_chatgpt_auth(account: &StoredAccount) -> Result<()> {
     let fresh_account = ensure_chatgpt_tokens_fresh(account).await?;
     let (access_token, chatgpt_account_id) = extract_chatgpt_auth(&fresh_account)?;
 
-    let mut response =
-        send_chatgpt_warmup_request(access_token, chatgpt_account_id, true).await?;
+    let mut response = send_chatgpt_warmup_request(access_token, chatgpt_account_id, true).await?;
     if response.status() == StatusCode::UNAUTHORIZED {
         println!(
             "[Warmup] Unauthorized for account {}, refreshing token and retrying once",
@@ -257,6 +259,8 @@ async fn send_chatgpt_usage_request(
     client
         .get(&url)
         .headers(headers)
+        .header(CACHE_CONTROL, "no-cache, no-store")
+        .header(PRAGMA, "no-cache")
         .send()
         .await
         .context("Failed to send usage request")
@@ -372,6 +376,7 @@ fn convert_payload_to_usage_info(account_id: &str, payload: RateLimitStatusPaylo
     UsageInfo {
         account_id: account_id.to_string(),
         plan_type: Some(payload.plan_type),
+        refreshed_at: chrono::Utc::now().timestamp(),
         primary_used_percent: primary.as_ref().map(|w| w.used_percent),
         primary_window_minutes: primary
             .as_ref()

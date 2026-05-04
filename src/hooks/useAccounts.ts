@@ -22,6 +22,7 @@ export function useAccounts() {
     (accountId: string, message: string, planType: string | null): UsageInfo => ({
       account_id: accountId,
       plan_type: planType,
+      refreshed_at: Math.floor(Date.now() / 1000),
       primary_used_percent: null,
       primary_window_minutes: null,
       primary_resets_at: null,

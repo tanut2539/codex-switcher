@@ -196,6 +196,8 @@ pub struct UsageInfo {
     pub account_id: String,
     /// Plan type
     pub plan_type: Option<String>,
+    /// Unix timestamp for when this usage record was fetched
+    pub refreshed_at: i64,
     /// Primary rate limit window usage (percentage 0-100)
     pub primary_used_percent: Option<f64>,
     /// Primary window duration in minutes
@@ -223,6 +225,7 @@ impl UsageInfo {
         Self {
             account_id,
             plan_type: None,
+            refreshed_at: Utc::now().timestamp(),
             primary_used_percent: None,
             primary_window_minutes: None,
             primary_resets_at: None,

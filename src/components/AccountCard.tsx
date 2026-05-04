@@ -25,7 +25,23 @@ function formatLastRefresh(date: Date | null): string {
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return date.toLocaleDateString();
+
+  const totalHours = Math.floor(diff / 3600);
+  return `${totalHours}h ago • ${formatRefreshDate(date)}`;
+}
+
+function formatRefreshDate(date: Date): string {
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getUsageRefreshDate(account: AccountWithUsage): Date | null {
+  if (!account.usage?.refreshed_at) return null;
+  return new Date(account.usage.refreshed_at * 1000);
 }
 
 function BlurredText({ children, blur }: { children: React.ReactNode; blur: boolean }) {
@@ -53,12 +69,10 @@ export const AccountCard = memo(function AccountCard({
   onToggleMask,
 }: AccountCardProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(
-    account.usage && !account.usage.error ? new Date() : null
-  );
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(account.name);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastRefresh = getUsageRefreshDate(account);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -71,7 +85,6 @@ export const AccountCard = memo(function AccountCard({
     setIsRefreshing(true);
     try {
       await onRefresh(account.id);
-      setLastRefresh(new Date());
     } finally {
       setIsRefreshing(false);
     }

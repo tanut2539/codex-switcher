@@ -16,6 +16,7 @@ export interface AccountInfo {
 export interface UsageInfo {
   account_id: string;
   plan_type: string | null;
+  refreshed_at: number;
   primary_used_percent: number | null;
   primary_window_minutes: number | null;
   primary_resets_at: number | null;
